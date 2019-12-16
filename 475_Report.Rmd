@@ -1,0 +1,1075 @@
+---
+output:
+  html_document:
+    highlight: zenburn
+    theme: united
+    df_print: paged
+    toc: yes
+    code_folding: hide
+    code_download: true
+---
+
+```{r r_setup, include = FALSE}
+## initial settings
+knitr::opts_chunk$set(
+  comment = NA,
+  echo = TRUE,
+  error = TRUE,
+  cache = FALSE,
+  message = FALSE,
+
+  dpi = 96,
+  warning = FALSE
+)
+
+## width to use when printing tables etc.
+options(
+  width = 250,
+  scipen = 100,
+  max.print = 5000,
+  stringsAsFactors = FALSE
+)
+
+## make all required libraries available by loading radiant package if needed
+if (is.null(shiny::getDefaultReactiveDomain())) library(radiant)
+
+## include code to load the data you require
+## for interactive use attach the r_data environment
+# attach(r_data)
+```
+
+<style>
+.table {
+  width: auto;
+}
+ul, ol {
+  padding-left: 18px;
+}
+pre {
+  overflow: auto;
+  white-space: pre;
+  word-wrap: normal;
+  background-color: #ffffff;
+}
+code, pre code {
+  overflow: auto;
+  white-space: pre;
+  word-wrap: normal;
+}
+</style>
+
+
+### clean data
+
+```{r}
+## Load commands
+Marketing_Research_Questionnaire_clean <- readr::read_csv("Desktop/Marketing Research Questionnaire_clean.csv", n_max = Inf) %>%
+  fix_names() %>%
+  to_fct()
+register("Marketing_Research_Questionnaire_clean")
+```
+
+```{r}
+## filter and sort the dataset
+project_data <- Marketing_Research_Questionnaire_clean %>%
+  filter(Q2 != 'Please indicate your gender:') %>%
+  select(Progress:Q11_4_TEXT_Topics)
+register("project_data", "Marketing_Research_Questionnaire_clean")
+# dtab(project_data, dec = 2, nr = 100) %>% render()
+```
+
+```{r}
+## rename variable(s)
+project_data <- rename(project_data, Q2_Gender = Q2)
+## rename variable(s)
+project_data <- rename(project_data, Q3_Affiliation = Q3)
+## rename variable(s)
+project_data <- rename(project_data, Q4_Ethnicity = Q4)
+## rename variable(s)
+project_data <- rename(project_data, Q5_Vegetarian = Q5)
+## rename variable(s)
+project_data <- rename(project_data, Q6_Frequency = Q6)
+## rename variable(s)
+project_data <- rename(project_data, Q7_TryorNot = Q7)
+## rename variable(s)
+project_data <- rename(project_data, Q8_KnoworNot = Q8)
+## rename variable(s)
+project_data <- rename(project_data, Q9_Spicy = Q9)
+## rename variable(s)
+project_data <- rename(project_data, Q10_Meals = Q10)
+## rename variable(s)
+project_data <- rename(project_data, Q11_PlaceToEat = Q11)
+## rename variable(s)
+project_data <- rename(project_data, Q11_Other_Text = Q11_4_TEXT)
+## rename variable(s)
+project_data <- rename(project_data, Q12_PricePay = Q12)
+## rename variable(s)
+project_data <- rename(project_data, Q13_DurablePrice = Q13)
+## rename variable(s)
+project_data <- rename(project_data, Q14_DurationWaitTime = Q14)
+## rename variable(s)
+project_data <- rename(project_data, Q15_Attitude = Q15_1)
+## rename variable(s)
+project_data <- rename(project_data, Q15_Speed = Q15_2)
+## rename variable(s)
+project_data <- rename(project_data, Q15_Environment = Q15_3)
+## rename variable(s)
+project_data <- rename(project_data, Q15_Quality = Q15_4)
+## rename variable(s)
+project_data <- rename(project_data, Q16_Source = Q16)
+## rename variable(s)
+project_data <- rename(project_data, Q17_Delivery = Q17)
+## rename variable(s)
+project_data <- rename(project_data, Q18_DeliveryFrequency = Q18)
+## rename variable(s)
+project_data <- rename(project_data, Q19_DeliveryScore = Q19_12)
+## rename variable(s)
+project_data <- rename(project_data, Q20_UnsatisfiedFeature = Q18_1)
+## rename variable(s)
+project_data <- rename(project_data, Q21_DurableDeliveryPrice = Q21)
+## rename variable(s)
+project_data <- rename(project_data, Q22_NewChoice = Q22)
+## rename variable(s)
+project_data <- rename(project_data, Q22_NewChoice_y = Q22_NewChoice)
+## rename variable(s)
+project_data <- rename(project_data, Q23_NewChoice_n = Q23)
+## rename variable(s)
+project_data <- rename(project_data, Q24_DurableDeliveryPrice_n = Q24)
+## rename variable(s)
+project_data <- rename(project_data, Q21_DurableDeliveryPrice_y = Q21_DurableDeliveryPrice)
+```
+
+```{r}
+## recode variable
+project_data <- mutate(project_data, Q2_Gender = car::Recode(Q2_Gender, "1=0; 2=1"))
+## recode variable
+project_data <- mutate(project_data, Q5_Vegetarian = car::Recode(Q5_Vegetarian, "2=0"))
+## recode variable
+project_data <- mutate(project_data, Q6_Frequency = car::Recode(Q6_Frequency, "6=4"))
+## recode variable
+project_data <- mutate(project_data, Q8_KnoworNot = car::Recode(Q8_KnoworNot, "4=1; 5=2; 6=3"))
+## recode variable
+project_data <- mutate(project_data, Q17_Delivery = car::Recode(Q17_Delivery, "2=0"))
+## recode variable
+project_data <- mutate(project_data, Q18_DeliveryFrequency = car::Recode(Q18_DeliveryFrequency, "11=1; 13=2; 15=3; 16=4"))
+## recode variable
+project_data <- mutate(project_data, Q22_NewChoice_y = car::Recode(Q22_NewChoice_y, "2=0"))
+## recode variable
+project_data <- mutate(project_data, Q23_NewChoice_n = car::Recode(Q23_NewChoice_n, "2=0"))
+```
+
+```{r}
+## change variable type
+project_data <- mutate_at(project_data, .vars = vars(Q3_Affiliation, Q4_Ethnicity, Q6_Frequency, Q7_TryorNot, Q8_KnoworNot, Q9_Spicy, Q10_Meals, Q11_PlaceToEat, Q11_Other_Text, Q12_PricePay, Q13_DurablePrice, Q14_DurationWaitTime, Q15_Attitude, Q15_Speed, Q15_Environment, Q15_Quality, Q16_Source, Q17_Delivery, Q18_DeliveryFrequency, Q20_UnsatisfiedFeature, Q21_DurableDeliveryPrice_y, Q22_NewChoice_y, Q23_NewChoice_n, Q24_DurableDeliveryPrice_n), .funs = as_factor)
+```
+
+```{r}
+## change variable type
+project_data <- mutate_at(project_data, .vars = vars(Q19_DeliveryScore), .funs = as_integer)
+```
+
+```{r}
+project_data <- project_data[4:30]
+```
+
+```{r}
+## create new variable(s)
+project_data <- mutate(project_data, Q7_Expensive = ifelse(Q7_TryorNot == 3, 1, 0))
+## create new variable(s)
+project_data <- mutate(project_data, Q7_Vege = ifelse(Q7_TryorNot == 4, 1, 0))
+## create new variable(s)
+project_data <- mutate(project_data, Q7_OtherCusines = ifelse(Q7_TryorNot == 5, 1, 0))
+## create new variable(s)
+project_data <- mutate(project_data, Q7_WaitLong = ifelse(Q7_TryorNot == 6, 1, 0))
+## create new variable(s)
+project_data <- mutate(project_data, Q7_Other = ifelse(Q7_TryorNot == 7, 1, 0))
+```
+
+```{r}
+## recode variable
+project_data <- mutate(project_data, Q7_TryorNot = car::Recode(Q7_TryorNot, "3=0; 4=0; 5=0; 6=0; 7=0"))
+```
+
+```{r}
+## change variable type
+project_data <- mutate_at(project_data, .vars = vars(Q7_Expensive, Q7_Vege, Q7_OtherCusines, Q7_WaitLong, Q7_Other), .funs = as_factor)
+```
+
+## Report
+
+### Part A. Open or Not
+
+**Gender Distribution**
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q2_Gender", 
+  type = "dist", 
+  fill = "Q2_Gender", 
+  labs = list(
+    title = "Gender Distribution", 
+    caption = "0 = Male\n1 = Female\n", 
+    x = "Gender", 
+    y = "Counts"
+  ), 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q2_Gender", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+**Affiliation Distribution**
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q3_Affiliation", 
+  type = "dist", 
+  fill = "Q3_Affiliation", 
+  labs = list(
+    title = "Affiliation Distribution", 
+    caption = "1 = Freshman\n2 = Sophomore\n3 = Junior\n4 = Senior\n5 = Masters/PHD/MBA\n6 = Staff and faculty\n", 
+    x = "Affiliation", 
+    y = "Counts"
+  ), 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q3_Affiliation", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+**Ethnicity Distribution**
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q4_Ethnicity", 
+  type = "dist", 
+  fill = "Q4_Ethnicity", 
+  labs = list(
+    title = "Ethnicity Distribution", 
+    caption = "1 = African-American\n2 = Asian\n3 = Caucasian\n4 = Hispanic\n5 = Others\n", 
+    x = "Ethnicity", 
+    y = "Counts"
+  ), 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q4_Ethnicity", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+**Vegetarian Distribution**
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q5_Vegetarian", 
+  type = "dist", 
+  fill = "Q5_Vegetarian", 
+  labs = list(
+    title = "Vegetarian Distribution", 
+    caption = "0 = Vegetarian\n1 = Non-Vegetarian\n", 
+    x = "Vegetarian", 
+    y = "Counts"
+  ), 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q5_Vegetarian", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+**Eat Frequency Distribution**
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q6_Frequency", 
+  type = "dist", 
+  fill = "Q6_Frequency", 
+  labs = list(
+    title = "Chinese Food Eating Frequency Distribution", 
+    caption = "1 = Daily\n2 = A few times a week\n3 = A few times a month\n4 = Never\n", 
+    x = "Chinese Food Eating", 
+    y = "Frequency"
+  ), 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q6_Frequency", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> From the data, we can find that around 11.43% of the sample size (only 12 people) in our data never eat Chinese food and over 60% of the sample size eat Chinese food at least a few times a month. This indicates that the size of potential customers for Chinese food is large.
+
+**Spicy Preference**
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q9_Spicy", 
+  type = "dist", 
+  fill = "Q9_Spicy", 
+  labs = list(
+    title = "Spicy Preference Distribution", 
+    caption = "1 = Like a great deal\n2 = Like somewhat\n3 = Neither like or dislike\n4 = Dislike somewhat\n5 = Dislike a great deal\n", 
+    x = "Spicy Preference", 
+    y = "Counts"
+  ),
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q9_Spicy", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+> We can find that 42.86% of our sample size like spciy food, which also indicate that there can be a great number of potential customers since one characteristic of Taste of Hunan is that it serve tasty spicy food.
+
+
+### Part B. Location
+
+**Frequency & Location Distribution**
+
+> To determine whether the owner of Taste of Hunan should open a new branch on campus, we also summarize the frequency and locations that students and faculty eat on campus. The distributions are shown as below:
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q10_Meals", 
+  type = "dist", 
+  fill = "Q10_Meals", 
+  labs = list(
+    title = "Meals Frequency On Campus",
+    subtitle = "Every Week",
+    caption = "1 = Less than 5 meals\n2 = 5-10 meals\n3 = More than 10 meals\n", 
+    x = "Meals", 
+    y = "Frequency"
+  ),
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q10_Meals", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> We can find that over half of our sample size eat less than 5 meals on campus.
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q11_PlaceToEat", 
+  type = "dist", 
+  fill = "Q11_PlaceToEat", 
+  labs = list(
+    title = "Eating Location On Campus",
+    subtitle = "Every Week",
+    caption = "1 = Price Center\n2 = College restaurants\n3 = Markets\n4 = Other places on campus\n5 = Off campus\n", 
+    x = "Location", 
+    y = "Frequency"
+  ),
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q11_PlaceToEat", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> From the distribution and pivot table above, we reach the conclusion that more than half of students (52.38%) choose Price Center for meals on weekdays, and the number is much larger than other options. Off-campus is the second popular choice, which takes 18.1% of all respondents.
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q11_Other_Text", 
+  data_filter = "Q11_Other_Text != ''", 
+  nr = Inf
+)
+summary(result)
+# dtab(result) %>% render()
+```
+
+> For people choosing other places on campus, they either cook, go to old student center, or order takeouts.
+
+```{r}
+## recode variable
+project_data <- mutate(project_data, Q11_PC = car::Recode(Q11_PlaceToEat, "lo:2 = 'PC'; else = 'Not PC'"))
+```
+
+```{r}
+## change variable type
+project_data <- mutate_ext(project_data, .vars = vars(Q14_DurationWaitTime), .funs = as_numeric, .ext = "_Num")
+```
+
+```{r fig.width = 7, fig.height = 4.31, dpi = 96}
+result <- compare_means(
+  project_data, 
+  var1 = "Q11_PC", 
+  var2 = "Q14_DurationWaitTime_Num", 
+  alternative = "greater"
+)
+summary(result, show = FALSE)
+plot(result, plots = "scatter", custom = FALSE)
+```
+
+> We split the data into two groups: those who choose PC and those not. And we want to know if people go to PC tend to wait for less time, by conducting hypothesis testing to compare group means of the longest waiting time. We encode the option "Less than 10 minutes" as 1, and the number increases by 1 as waiting time indicated by options increases. 
+
+> From the above results, the p value is greater than 0.05, so we fail to reject the null hypothesis, which indicates that the reason people choose PC is not shorter waiting time, maybe of other reasons.
+
+### Part C. Order Delivery Food
+
+> How many people have ever ordered food delivery?
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q17_Delivery", 
+  type = "dist", 
+  fill = "Q17_Delivery", 
+  labs = list(
+    title = "The Number of People Who Have Ever Ordered Delivery Food", 
+    caption = "0 = no \n1 = yes", 
+    x = "Ordered or not", 
+    y = "Number of people"
+  ), 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q17_Delivery", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE)
+# dtab(result, perc = TRUE) %>% render()
+```
+
+> Based on the graph below, 64.76% of participants have ordered delivery food, which indicates that delivery food has become a familiar life-style of most people. In our 105 participants base, 68 of them have ordered delivery food at least once. Then, we conducted deeper analysis on their experience of delivery food.
+
+> Consuming behavior analysis of those who order delivery food 
+> 1.Frequency 
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q18_DeliveryFrequency", 
+  type = "dist", 
+  fill = "Q18_DeliveryFrequency", 
+  labs = list(
+    title = "Frequency of Ordering Delivery Food", 
+    caption = "1 = almost everyday\n2 = 2-3 times a week\n3 = once every two weeks\n4 = once a month", 
+    x = "Times of Ordering Delivery Food", 
+    y = "Number of people"
+  ), 
+  custom = FALSE
+)
+```
+
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q18_DeliveryFrequency", 
+  normalize = "total", 
+  data_filter = "Q18_DeliveryFrequency != 'NA'", 
+  nr = Inf
+)
+summary(result, perc = TRUE)
+# dtab(result, perc = TRUE) %>% render()
+```
+
+> In the 68 participants who have once ordered delivery food, 67.64% of them order delivery food occasionally(which is defined that, people order delivery food less than every half a month). Only 5.88% of participants are highly rely on delivery food, and 26.47% of participants order 2-3 times a week. 
+
+> We can estimate the demand of each day. Assume that we 100 people and each person have two meals during school day, 5.882 *((1+2)/2)/10 + 26.471 * ((4+6)/2)/10 + 23.529 * 1/20 + 44.118 * 1/40 = 16.40. That is to say, in the whole population of students who buy food during school days, 16.40% of them would order delivery food, which is a huge demand.
+
+> 2. Satisfaction level
+
+```{r}
+result <- explore(
+  project_data, 
+  vars = "Q19_DeliveryScore", 
+  fun = c("n_obs", "mean", "min", "max", "sd"), 
+  data_filter = "Q18_DeliveryFrequency != 'NA'", 
+  nr = Inf
+)
+summary(result)
+# dtab(result) %>% render()
+```
+
+```{r}
+result <- explore(
+  project_data, 
+  vars = "Q19_DeliveryScore", 
+  byvar = "Q18_DeliveryFrequency", 
+  fun = c("n_obs", "mean", "min", "max", "sd"), 
+  data_filter = "Q18_DeliveryFrequency != 'NA'", 
+  nr = Inf
+)
+summary(result)
+# dtab(result) %>% render()
+```
+
+> In the above table, the number in delivery frequency stands for : 1: almost everyday; 2: 2-3 times a week; 3: once every two weeks; 4: once a month.
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q18_DeliveryFrequency", 
+  yvar = "Q19_DeliveryScore", 
+  type = "scatter", 
+  nrobs = -1, 
+  labs = list(
+    title = "Frequency of Ordering Delivery Food", 
+    caption = "1 = almost everyday\n2 = 2-3 times a week\n3 = once every two weeks\n4 = once a month", 
+    x = "Times of Ordering Delivery Food", 
+    y = "Number of people"
+  ), 
+  data_filter = "Q18_DeliveryFrequency != 'NA'", 
+  custom = FALSE
+)
+```
+
+> We asked a question like, to what extent are you satisfied with food delivery service. The average score is 68.985, with the maximum of 95 and the minimum of 20. Besides, people who order delivery food at different frequency have totally different satisfaction level. An interesting finding is that, for those who order delivery food everyday, the average satisfaction score is 73, while for those who seldom order, the average score is 63.47. It is possible that people who have pleasure experience are likely to order more often. In the third graph, we depicted the variance of people's satisfaction score in different groups. The result can be explained that, the variance of scores among people who order delivery everyday is smallest, and for those who seldom order delivery, their user experience is very different.
+
+```{r}
+## create new variable(s)
+project_data <- mutate(project_data, Satisfy = ifelse(Q19_DeliveryScore >= 60,1,0))
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Satisfy", 
+  normalize = "total", 
+  data_filter = "Satisfy != 'NA'", 
+  nr = Inf
+)
+summary(result, perc = TRUE)
+# dtab(result, perc = TRUE) %>% render()
+```
+
+> We assume that if the score is equal to or bigger than 60, than he is generally satisfied with delivery food service. We added another column to define whether a person is satisfiesd or not, which will be used in later parts.
+
+> 3. Unsatisfied Features
+
+```{r}
+## create new variable(s)
+project_data <- mutate(project_data, Q20_uu1 = ifelse(Q20_UnsatisfiedFeature == "1" | Q20_UnsatisfiedFeature == "1,2" | Q20_UnsatisfiedFeature =="1,2,3" | Q20_UnsatisfiedFeature =="1,2,3,6" | Q20_UnsatisfiedFeature=="1,2,6" | Q20_UnsatisfiedFeature=="1,3" | Q20_UnsatisfiedFeature=="1,3,6" | Q20_UnsatisfiedFeature == "1,6",1,0))
+## create new variable(s)
+project_data <- mutate(project_data, Q20_uu2 = ifelse(Q20_UnsatisfiedFeature == "2" | Q20_UnsatisfiedFeature == "1,2" | Q20_UnsatisfiedFeature =="1,2,3" | Q20_UnsatisfiedFeature =="1,2,3,6" | Q20_UnsatisfiedFeature=="1,2,6" | Q20_UnsatisfiedFeature=="2,3" | Q20_UnsatisfiedFeature=="2,3,6" | Q20_UnsatisfiedFeature == "2,6",1,0))
+## create new variable(s)
+project_data <- mutate(project_data, Q20_uu3 = ifelse(Q20_UnsatisfiedFeature == "3" | Q20_UnsatisfiedFeature == "1,3" | Q20_UnsatisfiedFeature =="1,2,3" | Q20_UnsatisfiedFeature =="1,2,3,6" | Q20_UnsatisfiedFeature=="1,3,6" | Q20_UnsatisfiedFeature=="2,3" | Q20_UnsatisfiedFeature=="2,3,6",1,0))
+## create new variable(s)
+project_data <- mutate(project_data, Q20_uu6 = ifelse(Q20_UnsatisfiedFeature == "1,6" | Q20_UnsatisfiedFeature =="1,2,6" | Q20_UnsatisfiedFeature =="1,2,3,6" | Q20_UnsatisfiedFeature=="1,3,6" | Q20_UnsatisfiedFeature=="2,6" | Q20_UnsatisfiedFeature=="2,3,6",1,0))
+```
+
+
+```{r}
+result <- explore(
+  project_data, 
+  vars = c("Q20_uu1", "Q20_uu2", "Q20_uu3", "Q20_uu6"), 
+  fun = c("n_obs", "mean"), 
+  nr = Inf
+)
+summary(result)
+# dtab(result) %>% render()
+```
+
+> To provide better service for delivery food, we designed a question about what features make you unsatisfied with delivery food. Q20-uu1 stands for "Long wait", Q20-uu2 stands for "Expensive Delivery Fee", Q20-uu3 stands for "Low quality food", Q20-uu4 stands for "Bad services". The result shows that the most important two features are: Long wait and Expensive delivery fee. By comparision, low quality and bad service are not most important items.
+
+> Regression: satisfaction score vs. unsatisfied factor
+
+```{r}
+result <- regress(
+  project_data, 
+  rvar = "Q19_DeliveryScore", 
+  evar = c("Q20_uu1", "Q20_uu2", "Q20_uu3", "Q20_uu6")
+)
+summary(result, sum_check = "rmse")
+```
+
+> We wonder that whether people's satisfaction score is depend on the reason why they do not like delivery food. Therefore, we build a regression model. Same as below, Q20-uu1 stands for "Long wait", Q20-uu2 stands for "Expensive Delivery Fee", Q20-uu3 stands for "Low quality food", Q20-uu4 stands for "Bad services". 
+
+> The model has a very low R-square and >0.1 p-value, which indicates that the four reasons do not have a significant effect on the satisfation score. It is revealed that, the satisfaction score cannot be predicted only by this four reasons. Perhaps we need to add some positive reasons into the model, or it is also possible that, people give the score only based on the most important reason that they care about.
+
+> New choice:
+> Nowadyas, there is a new type of delivery service. Customers should place an order for their deliveries one noght in advance. On next morning, the food will be delivered to the designed place on time without waiting. After a brief investigation, we found that a several of Chinese restaurants have already started this kind of service. To test whether this will a warmly-welcomed service, we asked the opinion that whether people would like to try this service.
+
+```{r}
+result <- explore(
+  project_data, 
+  vars = c("Q22_NewChoice_y", "Q23_NewChoice_n"), 
+  fun = c("n_obs", "mean"), 
+  nr = Inf
+)
+summary(result)
+# dtab(result) %>% render()
+```
+> In the result table, Q22_NewChoice_y is a one-hot variable for people who have once ordered delivery food. If people have interest in this service, the output is 1, vice versa. Q23_NewChoice_n is a one-hot variable for people who have never ordered delivery food. If people have interest in this service, the output is 1, vice versa. 
+
+> We can conclude from the result table that, 30.9% of people who have ordered delivery food before have interest in this new service and 37.8% of people who have never ordered delivery food before have interest in this new service. The result doesn't have big difference. 
+
+```{r}
+result <- explore(
+  project_data, 
+  vars = c("Q21_DurableDeliveryPrice_y", "Q24_DurableDeliveryPrice_n"), 
+  fun = c("n_obs", "mean"), 
+  nr = Inf
+)
+summary(result)
+# dtab(result) %>% render()
+```
+
+> Availabe price range for delivery food
+> for people who have ordered delivery food before
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q21_DurableDeliveryPrice_y", 
+  type = "dist", 
+  fill = "Q21_DurableDeliveryPrice_y", 
+  labs = list(
+    title = "Preferred Price Range for Delivery Food", 
+    subtitle = "(for people who have ordered delivery food before)", 
+    caption = "1: < $15\n2: $16 - $20\n3: $20 - $30\n4: $30 - $40\n5: > $40", 
+    x = "Price Range", 
+    y = "Count"
+  ), 
+  data_filter = "Satisfy != 'NA'", 
+  custom = FALSE
+)
+```
+
+> for people who have never ordered delivery food before
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q24_DurableDeliveryPrice_n", 
+  type = "dist", 
+  fill = "Q24_DurableDeliveryPrice_n", 
+  labs = list(
+    title = "Preferred Price Range for Delivery Food", 
+    subtitle = "(for people who have never ordered delivery food before)", 
+    caption = "1: < $15\n2: $16 - $20\n3: $20 - $30\n4: $30 - $40\n5: > $40", 
+    x = "Price Range", 
+    y = "Count"
+  ), 
+  custom = FALSE
+)
+```
+
+> Comparing the two plots above, for those who have ordered delivery food before, most of them prefer the $16-$20 price range, while for those who have never ordered delivery food before, most of them prefer the < $15 price range. In both of the two groups, >$40 is not an available choice.
+
+
+### Part D. Other Analysis
+
+**Public Awareness (Advertisement)**
+
+> We also analyze the public awareness of Taste of Hunan as below:
+
+```{r}
+## recode variable
+project_data <- mutate(project_data, Q8_KnoworNot = car::Recode(Q8_KnoworNot, "2=1; 3=0"))
+```
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q8_KnoworNot", 
+  type = "dist", 
+  fill = "Q8_KnoworNot", 
+  labs = list(
+    title = "Public Awareness of Taste of Hunan", 
+    caption = "0 = Unknown\n1 = Known\n", 
+    x = "Public Awareness", 
+    y = "Counts"
+  ),
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q8_KnoworNot", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> From the distribution above, we can find that 47.62% of the sample size do not know Taste of Hunan, which means that almost half of the sample size do not know this restaurant.
+
+
+**Source**
+
+> To figure our a good way that Tast of Hunan should use to improve its public awareness, we do the distribution of source that people have to know a new restaurant. The result is shown as below:
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q16_Source", 
+  type = "dist", 
+  fill = "Q16_Source", 
+  labs = list(
+    title = "Sources for Knowing a New Restaurant", 
+    caption = "1 = Recommendation from friends and family\n2 = Leaflet\n3 = Email\n4 = Billboards\n5 = Other\n", 
+    x = "Sources", 
+    y = "Counts"
+  ),
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q16_Source", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> From the distribution above, we can find that 74.29% of our sample size know a new restaurant based on recommendation from friends and family. So, to improve its public awareness, it is a good way for Taste of Hunan to post the advertisement on the social network.
+
+
+**Price**
+
+> By doing a hypothesis test, we try to find whether the durable price that people will pay for a meal is greater than the average price that people pay for a meal on campus. 
+
+```{r}
+## change variable type
+project_data <- mutate_at(project_data, .vars = vars(Q12_PricePay, Q13_DurablePrice), .funs = as_numeric)
+```
+
+```{r fig.width = 7, fig.height = 4.31, dpi = 96}
+result <- compare_means(
+  project_data, 
+  var1 = "Q13_DurablePrice", 
+  var2 = "Q12_PricePay", 
+  alternative = "greater", 
+  comb = "1:2"
+)
+summary(result, show = FALSE)
+plot(result, plots = "scatter", custom = FALSE)
+```
+
+> From the hypothesis test above, we can get that the p-value is less than 0.001. Since the p-value is less than 0.05 (using a 5% significant level), we can reject the null hypothesis. So, we can conclude that the durable price that people will pay for a meal is greater than the average price that people pay for a meal on campus.
+
+> The distribution of durable price is shown as below:
+
+```{r}
+## change variable type
+project_data <- mutate_at(project_data, .vars = vars(Q12_PricePay, Q13_DurablePrice), .funs = as_factor)
+```
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q13_DurablePrice", 
+  type = "dist", 
+  fill = "Q13_DurablePrice", 
+  labs = list(
+    title = "Durable Price Distribution", 
+    caption = "1 = Less than $14\n2 = $15-$20\n3 = $21-$26\n4 = More than $26\n", 
+    x = "Durable Price", 
+    y = "Counts"
+  ),
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q13_DurablePrice", 
+  normalize = "total", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> The distribution shows that compares to other price range, $15-$20 is the price range that more people can accpet.
+
+> Based on the hypothese test and the distribution above, Taste of Hunan does not need to decrease its price level to the average price; however, it is also better for it not to set its price upon $20 for a meal.
+
+
+**Services**
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q15_Attitude",  
+  normalize = "total", 
+  nr = Inf
+)
+# summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+Attitude <- result$tab
+register("Attitude")
+```
+
+```{r}
+## rename variable(s)
+Attitude <- rename(Attitude, Q15 = Q15_Attitude)
+## rename variable(s)
+Attitude <- rename(Attitude, Attitude= n_obs)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q15_Speed", 
+  normalize = "total", 
+  nr = Inf
+)
+# summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+Speed <- result$tab
+register("Speed")
+```
+
+```{r}
+## rename variable(s)
+Speed <- rename(Speed, Q15 = Q15_Speed)
+## rename variable(s)
+Speed <- rename(Speed, Speed = n_obs)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q15_Environment", 
+  normalize = "total", 
+  nr = Inf
+)
+# summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+Environment <- result$tab
+register("Environment")
+```
+
+```{r}
+## rename variable(s)
+Environment <- rename(Environment, Q15 = Q15_Environment)
+## rename variable(s)
+Environment <- rename(Environment, Environment = n_obs)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q15_Quality", 
+  normalize = "total", 
+  nr = Inf
+)
+# summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+Quality <- result$tab
+register("Quality")
+```
+
+```{r}
+## rename variable(s)
+Quality <- rename(Quality, Q15 = Q15_Quality)
+## rename variable(s)
+Quality <- rename(Quality, Quality = n_obs)
+```
+
+```{r}
+service_comb <- combine_data(
+  x = Attitude, 
+  y = Speed, 
+  by = "Q15", 
+  add = "Speed", 
+  type = "left_join"
+)
+register("service_comb")
+```
+
+```{r}
+service_comb <- combine_data(
+  x = service_comb, 
+  y = Environment, 
+  by = "Q15", 
+  add = "Environment", 
+  type = "left_join"
+)
+register("service_comb")
+```
+
+```{r}
+service_comb <- combine_data(
+  x = service_comb, 
+  y = Quality, 
+  by = "Q15", 
+  add = "Quality", 
+  type = "left_join"
+)
+register("service_comb")
+```
+
+```{r}
+service_comb
+```
+
+>  The review of a dining place is decomposed into 4 aspects: attitude, speed, environment, and quality. Overall, these 4 aspects are all considered to be important when choosing what to eat, since large percentage of people choose 1 and 2 which stand for "very important" and "somewhat important".
+
+> Out of the four aspects, most people decide service speed and food quality as very important(61.9% & 71.4%), which suggests high-quality food served with speed is valued by customers. Sometimes speed can be sacrificed for quality since the former percentage is 10% lower than the latter one. 
+
+> In comparision, most people put service attitude and environment as "somewhat important"(44.8% & 43.8%), resulting them to be secondary aspects to consider in terms of dining on campus.
+
+> Our suggestion for Taste of Hunan is to keep the quality of food, and try to find ways to increase service speed, no matter opening a physical store or delivery service.
+
+
+**Menu**
+
+> Besides, we figure our whether these people who do not eat Chinese food would like to try it. The distribution is as below:
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q7_TryorNot", 
+  type = "dist", 
+  fill = "Q7_TryorNot", 
+  labs = list(
+    title = "Willingness of Try Distribution", 
+    caption = "0 = Not willing to try\n1 = Willing to try\n", 
+    x = "Willingness of Try", 
+    y = "Counts"
+  ),
+  data_filter = "Q6_Frequency == 4", 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q7_TryorNot", 
+  normalize = "total", 
+  data_filter = "Q6_Frequency == 4", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> Since around 66.67% of these people do not want to try a Chinese restaurant, we also try to analyze the reasons that people are not willing to try. The distribution of these reasons are as below:
+
+```{r}
+## create new variable(s)
+project_data <- mutate(project_data, Q7_Reasons = ifelse(Q7_Expensive == 1, 1, ifelse(Q7_Vege == 1, 2, ifelse(Q7_OtherCusines == 1, 3, ifelse(Q7_WaitLong == 1, 4, ifelse(Q7_Other == 1, 5, 0))))))
+```
+
+```{r}
+## change variable type
+project_data <- mutate_at(project_data, .vars = vars(Q7_Reasons), .funs = as_factor)
+```
+
+```{r fig.width = 7, fig.height = 7, dpi = 96}
+visualize(
+  project_data, 
+  xvar = "Q7_Reasons", 
+  type = "dist", 
+  fill = "Q7_Reasons", 
+  labs = list(
+    title = "Reasons of Not Eating Distribution", 
+    caption = "1 = Expensive\n2 = Vegetarian\n3 = Long Waiting Time\n4 = Other\n", 
+    x = "Reasons", 
+    y = "Counts"
+  ),
+  data_filter = "Q7_Reasons != 0", 
+  custom = FALSE
+)
+```
+
+```{r}
+result <- pivotr(
+  project_data, 
+  cvars = "Q7_Reasons", 
+  normalize = "total", 
+  data_filter = "Q7_Reasons != 0", 
+  nr = Inf
+)
+summary(result, perc = TRUE, dec = 2)
+# dtab(result, perc = TRUE, dec = 2) %>% render()
+```
+
+> From the graph and table above, we can find that most of people (62.5% of the sample size) do not want to try a Chinese restaurant due to the reason that they are vegetarians.
+
+> So, Taste of Hunan can attract more customers by add special vegetarian menur into its main menu.
+
